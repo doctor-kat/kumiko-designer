@@ -50,9 +50,9 @@ export const builtInPatterns: Pattern[] = [
       C: { weightMultiplier: 1.0, blockedBy: 'edgeParallel', startSide: 'center' },
     },
     edgeParallel: {
-      BC: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 2.5, isBlocker: true },
-      CA: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 2.5, isBlocker: true },
-      AB: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 2.5, isBlocker: true },
+      BC: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 1.5, isBlocker: true },
+      CA: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 1.5, isBlocker: true },
+      AB: { positionMode: 'from-corner', distance: 2.5, weightMultiplier: 1.5, isBlocker: true },
     },
     cornerArcs: { AB: null, BC: null, CA: null },
   },
