@@ -29,9 +29,9 @@ export const builtInPatterns: Pattern[] = [
     baseWeight: 0.8,
     cornerToCenter: { A: null, B: null, C: null },
     edgeParallel: {
-      BC: { positionMode: 'from-edge', distance: 3.0, weightMultiplier: 1.0, isBlocker: false },
-      CA: { positionMode: 'from-edge', distance: 3.0, weightMultiplier: 1.0, isBlocker: false },
-      AB: { positionMode: 'from-edge', distance: 3.0, weightMultiplier: 1.0, isBlocker: false },
+      BC: { positionMode: 'from-edge', distance: 2.0, weightMultiplier: 1.0, isBlocker: false },
+      CA: { positionMode: 'from-edge', distance: 2.0, weightMultiplier: 1.0, isBlocker: false },
+      AB: { positionMode: 'from-edge', distance: 2.0, weightMultiplier: 1.0, isBlocker: false },
     },
     cornerArcs: { AB: null, BC: null, CA: null },
   },
