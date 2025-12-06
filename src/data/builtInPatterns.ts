@@ -72,9 +72,9 @@ export const builtInPatterns: Pattern[] = [
       AB: { positionMode: 'from-edge', distance: 3.0, weightMultiplier: 1.0, isBlocker: false },
     },
     cornerArcs: {
-      AB: { radius: 8.0, weightMultiplier: 1.0 },
-      BC: { radius: 8.0, weightMultiplier: 1.0 },
-      CA: { radius: 8.0, weightMultiplier: 1.0 },
+      AB: { radius: 15.0, weightMultiplier: 1.0 },
+      BC: { radius: 15.0, weightMultiplier: 1.0 },
+      CA: { radius: 15.0, weightMultiplier: 1.0 },
     },
   },
 ];
