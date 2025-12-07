@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { Pattern, Panel, View, AppSettings, CellConfig } from '../types';
 import { builtInPatterns, createEmptyPattern, duplicatePattern } from '../data/builtInPatterns';
+import { testPatterns } from '../data/testPatterns';
 
 interface AppStore {
   // Navigation
@@ -57,7 +58,7 @@ export const useAppStore = create<AppStore>()(
       currentView: 'library',
       editingPatternId: null,
       editingPanelId: null,
-      patterns: [...builtInPatterns],
+      patterns: [...builtInPatterns, ...testPatterns],
       panels: [],
       settings: defaultSettings,
       
@@ -96,8 +97,9 @@ export const useAppStore = create<AppStore>()(
       
       deletePattern: (patternId) => {
         const pattern = get().patterns.find((p) => p.id === patternId);
-        if (pattern?.isBuiltIn) return; // Can't delete built-ins
-        
+        // Can't delete built-ins or test patterns
+        if (pattern?.isBuiltIn || pattern?.tags?.includes('test')) return;
+
         set((state) => ({
           patterns: state.patterns.filter((p) => p.id !== patternId),
           editingPatternId: state.editingPatternId === patternId ? null : state.editingPatternId,
@@ -259,11 +261,14 @@ export const useAppStore = create<AppStore>()(
       }),
       merge: (persisted, current) => {
         const persistedState = persisted as Partial<AppStore>;
-        
-        // Ensure built-in patterns are always present
-        const customPatterns = (persistedState.patterns || []).filter(p => !p.isBuiltIn);
-        const allPatterns = [...builtInPatterns, ...customPatterns];
-        
+
+        // Ensure built-in and test patterns are always present
+        // Filter out built-in patterns, test patterns, and keep only user custom patterns
+        const customPatterns = (persistedState.patterns || []).filter(
+          p => !p.isBuiltIn && !p.tags?.includes('test')
+        );
+        const allPatterns = [...builtInPatterns, ...testPatterns, ...customPatterns];
+
         return {
           ...current,
           patterns: allPatterns,

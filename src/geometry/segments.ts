@@ -29,7 +29,8 @@ import { lineLineIntersection } from './clipping';
 export function generatePatternSegments(
     pattern: Pattern,
     triangle: Triangle,
-    rotation: 0 | 120 | 240 = 0
+    rotation: 0 | 120 | 240 = 0,
+    edgeWeight: number = 0.8
 ): RenderedSegments {
     // Apply rotation to triangle if needed
     const tri = rotateTriangle(triangle, rotation);
@@ -41,14 +42,15 @@ export function generatePatternSegments(
     };
 
     // Generate edge-parallel segments first (they may block corner-to-center)
-    const edgeParallelResult = generateEdgeParallelSegments(pattern, tri);
+    const edgeParallelResult = generateEdgeParallelSegments(pattern, tri, edgeWeight);
     result.lines.push(...edgeParallelResult.lines);
 
     // Generate corner-to-center segments (may be blocked)
     const cornerToCenterLines = generateCornerToCenterSegments(
         pattern,
         tri,
-        edgeParallelResult.blockerInfo
+        edgeParallelResult.blockerInfo,
+        edgeWeight
     );
     result.lines.push(...cornerToCenterLines);
 
@@ -79,7 +81,8 @@ interface EdgeParallelResult {
  */
 function generateEdgeParallelSegments(
     pattern: Pattern,
-    tri: Triangle
+    tri: Triangle,
+    edgeWeight: number
 ): EdgeParallelResult {
     const lines: LineSegment[] = [];
     const blockerInfo: BlockerInfo[] = [];
@@ -169,11 +172,14 @@ function generateEdgeParallelSegments(
 
         if (!int1 || !int2) continue;
 
-        // Create the line segment
+        // Edge-parallel lines intersect with triangle edges at both ends
+        // We'll use edgeWeight which is passed in from the caller
         lines.push({
             start: int1,
             end: int2,
             weight,
+            startIntersectWeight: edgeWeight,
+            endIntersectWeight: edgeWeight,
         });
 
         // If this is a blocker, store info for corner-to-center blocking
@@ -195,10 +201,20 @@ function generateEdgeParallelSegments(
 function generateCornerToCenterSegments(
     pattern: Pattern,
     tri: Triangle,
-    blockers: BlockerInfo[]
+    blockers: BlockerInfo[],
+    edgeWeight: number
 ): LineSegment[] {
     const lines: LineSegment[] = [];
     const corners: Corner[] = ['A', 'B', 'C'];
+
+    // Calculate weight of lines meeting at center (for other corner-to-center lines)
+    const centerWeights: number[] = corners
+        .map(c => pattern.cornerToCenter[c])
+        .filter(config => config !== null)
+        .map(config => pattern.baseWeight * config!.weightMultiplier);
+    const avgCenterWeight = centerWeights.length > 0
+        ? centerWeights.reduce((a, b) => a + b, 0) / centerWeights.length
+        : 0;
 
     for (const corner of corners) {
         const config = pattern.cornerToCenter[corner];
@@ -210,6 +226,8 @@ function generateCornerToCenterSegments(
 
         let start = cornerPoint;
         let end = centerPoint;
+        let startIntersectWeight = edgeWeight; // starts at triangle edge
+        let endIntersectWeight = avgCenterWeight; // ends at center meeting other lines
 
         // Handle blocking
         if (config.blockedBy === 'edgeParallel') {
@@ -231,15 +249,17 @@ function generateCornerToCenterSegments(
                     if (config.startSide === 'center') {
                         // Line goes from blocker (offset by half width toward center) to center
                         start = add(intersection, scale(dir, blocker.halfWidth));
+                        startIntersectWeight = blocker.halfWidth * 2; // blocker weight
                     } else {
                         // Line goes from corner to blocker (offset by half width toward corner)
                         end = add(intersection, scale(dir, -blocker.halfWidth));
+                        endIntersectWeight = blocker.halfWidth * 2; // blocker weight
                     }
                 }
             }
         }
 
-        lines.push({ start, end, weight });
+        lines.push({ start, end, weight, startIntersectWeight, endIntersectWeight });
     }
 
     return lines;

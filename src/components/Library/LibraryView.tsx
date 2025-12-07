@@ -15,8 +15,9 @@ export function LibraryView() {
     editPanel 
   } = useAppStore();
   
-  const builtInPatterns = patterns.filter(p => p.isBuiltIn);
-  const customPatterns = patterns.filter(p => !p.isBuiltIn);
+  const traditionalPatterns = patterns.filter(p => p.isBuiltIn);
+  const testPatterns = patterns.filter(p => p.tags?.includes('test'));
+  const customPatterns = patterns.filter(p => !p.isBuiltIn && !p.tags?.includes('test'));
   
   return (
     <div className="h-full flex flex-col bg-stone-900">
@@ -51,13 +52,13 @@ export function LibraryView() {
       {/* Content */}
       <div className="flex-1 overflow-auto">
         <div className="px-8 py-6 space-y-10">
-          {/* Built-in Patterns */}
+          {/* Traditional Patterns */}
           <section>
             <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">
               Traditional Patterns
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {builtInPatterns.map(pattern => (
+              {traditionalPatterns.map(pattern => (
                 <PatternCard
                   key={pattern.id}
                   pattern={pattern}
@@ -66,7 +67,23 @@ export function LibraryView() {
               ))}
             </div>
           </section>
-          
+
+          {/* Test Patterns */}
+          <section>
+            <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">
+              Test Patterns
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {testPatterns.map(pattern => (
+                <PatternCard
+                  key={pattern.id}
+                  pattern={pattern}
+                  onClick={() => editPattern(pattern.id)}
+                />
+              ))}
+            </div>
+          </section>
+
           {/* Custom Patterns */}
           <section>
             <div className="flex items-center justify-between mb-4">

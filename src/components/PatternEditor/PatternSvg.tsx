@@ -31,6 +31,7 @@ export function PatternSvg({
                                className = '',
                            }: PatternSvgProps) {
     const transform = `translate(${offsetX}, ${offsetY}) scale(${scale})`;
+    const clipId = `triangle-clip-${Math.random().toString(36).substr(2, 9)}`;
 
     return (
         <svg
@@ -39,6 +40,18 @@ export function PatternSvg({
             viewBox={`0 0 ${width} ${height}`}
             className={className}
         >
+            {/* Define clip path for triangle */}
+            {triangle && (
+                <defs>
+                    <clipPath id={clipId}>
+                        <polygon
+                            points={`${triangle.A.x},${triangle.A.y} ${triangle.B.x},${triangle.B.y} ${triangle.C.x},${triangle.C.y}`}
+                            transform={transform}
+                        />
+                    </clipPath>
+                </defs>
+            )}
+
             <g transform={transform}>
                 {/* Triangle fill (background) */}
                 {showTriangle && triangle && (
@@ -48,26 +61,31 @@ export function PatternSvg({
                         stroke="none"
                     />
                 )}
+            </g>
 
-                {/* Polygon segments (edge-parallel trapezoids) */}
-                {segments.polygons.map((poly, i) => (
-                    <PolygonShape key={`poly-${i}`} polygon={poly} strokeColor={strokeColor} />
-                ))}
+            {/* Clipped content */}
+            <g clipPath={triangle ? `url(#${clipId})` : undefined}>
+                <g transform={transform}>
+                    {/* Polygon segments */}
+                    {segments.polygons.map((poly, i) => (
+                        <PolygonShape key={`poly-${i}`} polygon={poly} strokeColor={strokeColor} />
+                    ))}
 
-                {/* Line segments */}
-                {segments.lines.map((line, i) => (
-                    <LineShape key={`line-${i}`} line={line} strokeColor={strokeColor} />
-                ))}
+                    {/* Line segments (shortened by half weight at each end) */}
+                    {segments.lines.map((line, i) => (
+                        <ShortenedLineShape key={`line-${i}`} line={line} strokeColor={strokeColor} />
+                    ))}
 
-                {/* Arc segments */}
-                {segments.arcs.map((arc, i) => (
-                    <ArcShape key={`arc-${i}`} arc={arc} strokeColor={strokeColor} />
-                ))}
+                    {/* Arc segments */}
+                    {segments.arcs.map((arc, i) => (
+                        <ArcShape key={`arc-${i}`} arc={arc} strokeColor={strokeColor} />
+                    ))}
 
-                {/* Triangle edges */}
-                {showTriangle && edges.map((edge, i) => (
-                    <LineShape key={`edge-${i}`} line={edge} strokeColor={strokeColor} />
-                ))}
+                    {/* Triangle edges */}
+                    {showTriangle && edges.map((edge, i) => (
+                        <LineShape key={`edge-${i}`} line={edge} strokeColor={strokeColor} />
+                    ))}
+                </g>
             </g>
         </svg>
     );
@@ -80,6 +98,50 @@ function LineShape({ line, strokeColor }: { line: LineSegment; strokeColor: stri
             y1={line.start.y}
             x2={line.end.x}
             y2={line.end.y}
+            stroke={strokeColor}
+            strokeWidth={line.weight}
+            strokeLinecap="round"
+        />
+    );
+}
+
+function ShortenedLineShape({ line, strokeColor }: { line: LineSegment; strokeColor: string }) {
+    // Only shorten if our line is thicker than the intersecting line
+    // If the intersecting line is thicker, it will hide our endpoint
+    const dx = line.end.x - line.start.x;
+    const dy = line.end.y - line.start.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+
+    const startIntersect = line.startIntersectWeight ?? 0;
+    const endIntersect = line.endIntersectWeight ?? 0;
+
+    // Only shorten by the amount our line extends past the intersecting line
+    const startShorten = Math.max(0, (line.weight - startIntersect) / 2);
+    const endShorten = Math.max(0, (line.weight - endIntersect) / 2);
+
+    if (len < startShorten + endShorten || (startShorten === 0 && endShorten === 0)) {
+        // No shortening needed or line too short
+        return <LineShape line={line} strokeColor={strokeColor} />;
+    }
+
+    const startRatio = startShorten / len;
+    const endRatio = endShorten / len;
+
+    const newStart = {
+        x: line.start.x + dx * startRatio,
+        y: line.start.y + dy * startRatio,
+    };
+    const newEnd = {
+        x: line.end.x - dx * endRatio,
+        y: line.end.y - dy * endRatio,
+    };
+
+    return (
+        <line
+            x1={newStart.x}
+            y1={newStart.y}
+            x2={newEnd.x}
+            y2={newEnd.y}
             stroke={strokeColor}
             strokeWidth={line.weight}
             strokeLinecap="round"
@@ -108,19 +170,13 @@ function ArcShape({ arc, strokeColor }: { arc: ArcSegment; strokeColor: string }
     const endY = arc.center.y + arc.radius * Math.sin(arc.endAngle);
 
     // We always want the shorter arc (< 180 degrees)
-    // largeArc = 0 means use the arc < 180°
-    // sweepFlag determines direction: 1 = clockwise, 0 = counter-clockwise
-
-    // Calculate which direction gives us the shorter arc
     let angleDiff = arc.endAngle - arc.startAngle;
 
     // Normalize to [-π, π]
     while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
     while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
-    // If angleDiff > 0, we go counter-clockwise from start to end (sweepFlag = 0)
-    // If angleDiff < 0, we go clockwise from start to end (sweepFlag = 1)
-    // But SVG Y-axis is flipped, so we need to invert
+    // Determine sweep direction
     const sweepFlag = angleDiff < 0 ? 0 : 1;
 
     // SVG arc path - always use small arc (largeArc = 0)
