@@ -5,6 +5,7 @@ interface PatternSvgProps {
     segments: RenderedSegments;
     edges?: LineSegment[];
     triangle?: Triangle;
+    triangles?: Triangle[];
     width: number;
     height: number;
     scale?: number;
@@ -20,6 +21,7 @@ export function PatternSvg({
                                segments,
                                edges = [],
                                triangle,
+                               triangles,
                                width,
                                height,
                                scale = 1,
@@ -33,6 +35,9 @@ export function PatternSvg({
     const transform = `translate(${offsetX}, ${offsetY}) scale(${scale})`;
     const clipId = `triangle-clip-${Math.random().toString(36).substr(2, 9)}`;
 
+    // Use triangles array if provided, otherwise use single triangle
+    const allTriangles = triangles || (triangle ? [triangle] : []);
+
     return (
         <svg
             width={width}
@@ -40,31 +45,35 @@ export function PatternSvg({
             viewBox={`0 0 ${width} ${height}`}
             className={className}
         >
-            {/* Define clip path for triangle */}
-            {triangle && (
+            {/* Define clip path for all triangles */}
+            {allTriangles.length > 0 && (
                 <defs>
                     <clipPath id={clipId}>
-                        <polygon
-                            points={`${triangle.A.x},${triangle.A.y} ${triangle.B.x},${triangle.B.y} ${triangle.C.x},${triangle.C.y}`}
-                            transform={transform}
-                        />
+                        {allTriangles.map((tri, i) => (
+                            <polygon
+                                key={i}
+                                points={`${tri.A.x},${tri.A.y} ${tri.B.x},${tri.B.y} ${tri.C.x},${tri.C.y}`}
+                                transform={transform}
+                            />
+                        ))}
                     </clipPath>
                 </defs>
             )}
 
             <g transform={transform}>
-                {/* Triangle fill (background) */}
-                {showTriangle && triangle && (
+                {/* Triangle fills (background) */}
+                {showTriangle && allTriangles.map((tri, i) => (
                     <polygon
-                        points={`${triangle.A.x},${triangle.A.y} ${triangle.B.x},${triangle.B.y} ${triangle.C.x},${triangle.C.y}`}
+                        key={i}
+                        points={`${tri.A.x},${tri.A.y} ${tri.B.x},${tri.B.y} ${tri.C.x},${tri.C.y}`}
                         fill={fillColor}
                         stroke="none"
                     />
-                )}
+                ))}
             </g>
 
             {/* Clipped content */}
-            <g clipPath={triangle ? `url(#${clipId})` : undefined}>
+            <g clipPath={allTriangles.length > 0 ? `url(#${clipId})` : undefined}>
                 <g transform={transform}>
                     {/* Polygon segments */}
                     {segments.polygons.map((poly, i) => (
