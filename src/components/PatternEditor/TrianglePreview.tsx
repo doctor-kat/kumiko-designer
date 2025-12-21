@@ -33,18 +33,17 @@ export function TrianglePreview({
   const offsetY = (size - triangleHeight * scale) / 2;
   
   return (
-    <div className={`bg-stone-800 rounded-lg overflow-hidden ${className}`}>
-      <PatternSvg
-        segments={preview.segments}
-        edges={preview.edges}
-        triangle={preview.triangle}
-        width={size}
-        height={size}
-        scale={scale}
-        offsetX={offsetX}
-        offsetY={offsetY}
-        showTriangle={true}
-      />
-    </div>
+    <PatternSvg
+      segments={preview.segments}
+      edges={preview.edges}
+      triangle={preview.triangle}
+      width={size}
+      height={size}
+      scale={scale}
+      offsetX={offsetX}
+      offsetY={offsetY}
+      showTriangle={true}
+      className={`block ${className}`}
+    />
   );
 }

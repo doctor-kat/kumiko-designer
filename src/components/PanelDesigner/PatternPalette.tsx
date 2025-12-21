@@ -20,15 +20,15 @@ export function PatternPalette({ patterns, selectedPatternId, onSelect }: Patter
             key={pattern.id}
             onClick={() => onSelect(pattern.id)}
             className={`
-              p-2 rounded-lg transition-all duration-150
-              ${selectedPatternId === pattern.id 
-                ? 'bg-amber-900/40 ring-2 ring-amber-500' 
+              p-2 rounded-lg transition-all duration-150 flex items-center justify-center
+              ${selectedPatternId === pattern.id
+                ? 'bg-amber-900/40 ring-2 ring-amber-500'
                 : 'bg-stone-800/50 hover:bg-stone-800'
               }
             `}
             title={pattern.name}
           >
-            <TrianglePreview pattern={pattern} size={48} />
+            <TrianglePreview pattern={pattern} size={80} />
           </button>
         ))}
       </div>
