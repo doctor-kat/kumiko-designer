@@ -5,7 +5,6 @@ import { Button, Select } from '../common';
 import { TrianglePreview } from '../PatternEditor/TrianglePreview';
 import { GridCanvas } from './GridCanvas';
 import { PatternPalette } from './PatternPalette';
-import { PanelSettings } from './PanelSettings';
 
 export function PanelDesigner() {
   const {
@@ -103,8 +102,10 @@ export function PanelDesigner() {
   const handleBack = () => {
     editPanel(null);
   };
-  
-  const selectedPattern = patterns.find(p => p.id === selectedPatternId);
+
+  // Filter out test patterns from the designer
+  const designerPatterns = patterns.filter(p => !p.tags?.includes('test'));
+  const selectedPattern = designerPatterns.find(p => p.id === selectedPatternId);
   
   if (!localPanel) {
     return (
@@ -117,33 +118,91 @@ export function PanelDesigner() {
   return (
     <div className="h-full flex flex-col bg-stone-900">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-stone-800">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={handleBack}>
-            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </Button>
-          <div className="h-6 w-px bg-stone-700" />
-          <h1 className="text-lg font-semibold text-stone-200">
-            {localPanel.name}
-          </h1>
-          <span className="text-sm text-stone-500">
-            {localPanel.widthMm} × {localPanel.heightMm} mm
-          </span>
+      <header className="px-6 py-4 border-b border-stone-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={handleBack}>
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </Button>
+            <div className="h-6 w-px bg-stone-700" />
+            <input
+              type="text"
+              value={localPanel.name}
+              onChange={(e) => handlePanelChange({ ...localPanel, name: e.target.value })}
+              className="text-lg font-semibold text-stone-200 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-stone-600 rounded px-2 -mx-2"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            {hasChanges && (
+              <span className="text-sm text-stone-500">Saving...</span>
+            )}
+            <Button variant="secondary" onClick={() => {}}>
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
+            </Button>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          {hasChanges && (
-            <span className="text-sm text-stone-500">Saving...</span>
-          )}
-          <Button variant="secondary" onClick={() => {}}>
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export
-          </Button>
+
+        {/* Panel Settings Row */}
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <label className="text-stone-400">Width:</label>
+            <input
+              type="number"
+              value={localPanel.widthMm}
+              onChange={(e) => handlePanelChange({ ...localPanel, widthMm: Number(e.target.value) })}
+              className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
+              min={10}
+              max={1000}
+            />
+            <span className="text-stone-500">mm</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-stone-400">Height:</label>
+            <input
+              type="number"
+              value={localPanel.heightMm}
+              onChange={(e) => handlePanelChange({ ...localPanel, heightMm: Number(e.target.value) })}
+              className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
+              min={10}
+              max={1000}
+            />
+            <span className="text-stone-500">mm</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-stone-400">Triangle:</label>
+            <input
+              type="number"
+              value={localPanel.triangleSizeMm}
+              onChange={(e) => handlePanelChange({ ...localPanel, triangleSizeMm: Number(e.target.value) })}
+              className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
+              min={2}
+              max={50}
+              step={0.5}
+            />
+            <span className="text-stone-500">mm</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-stone-400">Default Pattern:</label>
+            <select
+              value={localPanel.defaultPatternId}
+              onChange={(e) => handlePanelChange({ ...localPanel, defaultPatternId: e.target.value })}
+              className="px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
+            >
+              {designerPatterns.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </header>
       
@@ -153,7 +212,7 @@ export function PanelDesigner() {
         <div className="flex-1">
           <GridCanvas
             panel={localPanel}
-            patterns={patterns}
+            patterns={designerPatterns}
             selectedPatternId={selectedPatternId}
             selectedRotation={selectedRotation}
             onCellClick={handleCellClick}
@@ -173,9 +232,9 @@ export function PanelDesigner() {
               <div className="flex items-center gap-3 p-3 bg-stone-800/50 rounded-lg">
                 {selectedPattern && (
                   <>
-                    <TrianglePreview 
-                      pattern={selectedPattern} 
-                      size={56} 
+                    <TrianglePreview
+                      pattern={selectedPattern}
+                      size={80}
                       rotation={selectedRotation}
                     />
                     <div className="flex-1 min-w-0">
@@ -203,7 +262,7 @@ export function PanelDesigner() {
             
             {/* Pattern Palette */}
             <PatternPalette
-              patterns={patterns}
+              patterns={designerPatterns}
               selectedPatternId={selectedPatternId}
               onSelect={setSelectedPatternId}
             />
@@ -222,13 +281,6 @@ export function PanelDesigner() {
                 </Button>
               </div>
             </div>
-            
-            {/* Panel Settings */}
-            <PanelSettings
-              panel={localPanel}
-              patterns={patterns}
-              onChange={handlePanelChange}
-            />
           </div>
         </div>
       </div>
