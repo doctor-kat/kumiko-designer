@@ -5,16 +5,18 @@ import { PatternCard } from './PatternCard';
 import { PanelCard } from './PanelCard';
 
 export function LibraryView() {
-  const { 
-    patterns, 
-    panels, 
-    createPattern, 
-    createPanel, 
+  const {
+    patterns,
+    panels,
+    createPattern,
+    createPanel,
     deletePanel,
-    editPattern, 
-    editPanel 
+    editPattern,
+    editPanel
   } = useAppStore();
-  
+
+  const [isTestPatternsCollapsed, setIsTestPatternsCollapsed] = React.useState(true);
+
   const traditionalPatterns = patterns.filter(p => p.isBuiltIn);
   const testPatterns = patterns.filter(p => p.tags?.includes('test'));
   const customPatterns = patterns.filter(p => !p.isBuiltIn && !p.tags?.includes('test'));
@@ -70,18 +72,34 @@ export function LibraryView() {
 
           {/* Test Patterns */}
           <section>
-            <h2 className="text-sm font-semibold text-stone-400 uppercase tracking-wider mb-4">
+            <button
+              onClick={() => setIsTestPatternsCollapsed(!isTestPatternsCollapsed)}
+              className="flex items-center gap-2 mb-4 text-sm font-semibold text-stone-400 uppercase tracking-wider hover:text-stone-300 transition-colors"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${isTestPatternsCollapsed ? '' : 'rotate-90'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
               Test Patterns
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {testPatterns.map(pattern => (
-                <PatternCard
-                  key={pattern.id}
-                  pattern={pattern}
-                  onClick={() => editPattern(pattern.id)}
-                />
-              ))}
-            </div>
+              <span className="text-xs text-stone-600 normal-case">
+                ({testPatterns.length})
+              </span>
+            </button>
+            {!isTestPatternsCollapsed && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {testPatterns.map(pattern => (
+                  <PatternCard
+                    key={pattern.id}
+                    pattern={pattern}
+                    onClick={() => editPattern(pattern.id)}
+                  />
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Custom Patterns */}
