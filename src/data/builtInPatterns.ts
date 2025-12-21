@@ -2,6 +2,19 @@ import { Pattern } from '../types';
 
 export const builtInPatterns: Pattern[] = [
   {
+    id: 'builtin-empty',
+    name: 'Empty',
+    description: 'No pattern - blank triangle',
+    tags: ['basic'],
+    created: Date.now(),
+    modified: Date.now(),
+    isBuiltIn: true,
+    baseWeight: 0.8,
+    cornerToCenter: { A: null, B: null, C: null },
+    edgeParallel: { BC: null, CA: null, AB: null },
+    cornerArcs: { AB: null, BC: null, CA: null },
+  },
+  {
     id: 'builtin-asanoha',
     name: 'Asanoha',
     description: 'Traditional hemp leaf pattern - three lines from corners meeting at center',

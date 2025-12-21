@@ -124,8 +124,8 @@ export const useAppStore = create<AppStore>()(
       createPanel: () => {
         const id = uuidv4();
         const { settings, patterns } = get();
-        const defaultPattern = patterns[0]; // Use first pattern as default
-        
+        const emptyPattern = patterns.find(p => p.id === 'builtin-empty');
+
         const panel: Panel = {
           id,
           name: 'New Panel',
@@ -135,16 +135,16 @@ export const useAppStore = create<AppStore>()(
           heightMm: 100,
           triangleSizeMm: settings.defaultTriangleSize,
           stlDepthMm: settings.defaultStlDepth,
-          defaultPatternId: defaultPattern?.id || '',
+          defaultPatternId: emptyPattern?.id || '',
           cells: {},
         };
-        
+
         set((state) => ({
           panels: [...state.panels, panel],
           editingPanelId: id,
           currentView: 'panel-designer',
         }));
-        
+
         return id;
       },
       
