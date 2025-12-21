@@ -24,6 +24,8 @@ export function PanelDesigner() {
   const [selectedPatternId, setSelectedPatternId] = useState<string>('');
   const [selectedRotation, setSelectedRotation] = useState<0 | 120 | 240>(0);
   const [hasChanges, setHasChanges] = useState(false);
+  const [desiredWidth, setDesiredWidth] = useState<number | null>(null);
+  const [desiredHeight, setDesiredHeight] = useState<number | null>(null);
   
   // Initialize local panel
   useEffect(() => {
@@ -31,6 +33,8 @@ export function PanelDesigner() {
       setLocalPanel(JSON.parse(JSON.stringify(sourcePanel)));
       setSelectedPatternId(sourcePanel.defaultPatternId);
       setHasChanges(false);
+      setDesiredWidth(null);
+      setDesiredHeight(null);
     }
   }, [sourcePanel?.id]);
   
@@ -61,7 +65,15 @@ export function PanelDesigner() {
     return { fittedWidth, fittedHeight };
   };
 
-  const handlePanelChange = (updated: Panel) => {
+  const handlePanelChange = (updated: Panel, userDesiredWidth?: number, userDesiredHeight?: number) => {
+    // Track user's desired values
+    if (userDesiredWidth !== undefined) {
+      setDesiredWidth(userDesiredWidth);
+    }
+    if (userDesiredHeight !== undefined) {
+      setDesiredHeight(userDesiredHeight);
+    }
+
     // Auto-fit dimensions to complete triangles when they change
     if (updated.heightMm !== localPanel?.heightMm ||
         updated.widthMm !== localPanel?.widthMm ||
@@ -184,26 +196,46 @@ export function PanelDesigner() {
             <label className="text-stone-400">Width:</label>
             <input
               type="number"
-              value={localPanel.widthMm}
-              onChange={(e) => handlePanelChange({ ...localPanel, widthMm: Number(e.target.value) })}
+              value={desiredWidth ?? localPanel.widthMm}
+              onChange={(e) => {
+                const desired = Number(e.target.value);
+                handlePanelChange({ ...localPanel, widthMm: desired }, desired, undefined);
+              }}
               className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
               min={10}
               max={1000}
             />
-            <span className="text-stone-500">mm</span>
+            <span className="text-stone-500">
+              mm
+              {desiredWidth && desiredWidth !== localPanel.widthMm && (
+                <span className="ml-1 text-stone-600">
+                  ({localPanel.widthMm.toFixed(1)})
+                </span>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <label className="text-stone-400">Height:</label>
             <input
               type="number"
-              value={localPanel.heightMm}
-              onChange={(e) => handlePanelChange({ ...localPanel, heightMm: Number(e.target.value) })}
+              value={desiredHeight ?? localPanel.heightMm}
+              onChange={(e) => {
+                const desired = Number(e.target.value);
+                handlePanelChange({ ...localPanel, heightMm: desired }, undefined, desired);
+              }}
               className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
               min={10}
               max={1000}
             />
-            <span className="text-stone-500">mm</span>
+            <span className="text-stone-500">
+              mm
+              {desiredHeight && desiredHeight !== localPanel.heightMm && (
+                <span className="ml-1 text-stone-600">
+                  ({localPanel.heightMm.toFixed(1)})
+                </span>
+              )}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -211,7 +243,12 @@ export function PanelDesigner() {
             <input
               type="number"
               value={localPanel.triangleSizeMm}
-              onChange={(e) => handlePanelChange({ ...localPanel, triangleSizeMm: Number(e.target.value) })}
+              onChange={(e) => {
+                // Reset desired dimensions when triangle size changes
+                setDesiredWidth(null);
+                setDesiredHeight(null);
+                handlePanelChange({ ...localPanel, triangleSizeMm: Number(e.target.value) });
+              }}
               className="w-20 px-2 py-1 bg-stone-800 text-stone-200 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-stone-600"
               min={2}
               max={50}
