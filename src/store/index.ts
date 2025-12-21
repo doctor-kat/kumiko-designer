@@ -143,10 +143,13 @@ export const useAppStore = create<AppStore>()(
         const { settings, patterns } = get();
         const emptyPattern = patterns.find(p => p.id === 'builtin-empty');
 
+        const desiredWidth = 100;
+        const desiredHeight = 100;
+
         // Fit initial dimensions to complete triangles
         const { fittedWidth, fittedHeight } = fitToCompleteTriangles(
-          100,
-          100,
+          desiredWidth,
+          desiredHeight,
           settings.defaultTriangleSize
         );
 
@@ -157,6 +160,8 @@ export const useAppStore = create<AppStore>()(
           modified: Date.now(),
           widthMm: fittedWidth,
           heightMm: fittedHeight,
+          desiredWidthMm: desiredWidth,
+          desiredHeightMm: desiredHeight,
           triangleSizeMm: settings.defaultTriangleSize,
           stlDepthMm: settings.defaultStlDepth,
           defaultPatternId: emptyPattern?.id || '',

@@ -76,6 +76,8 @@ export interface Panel {
 
     widthMm: number;
     heightMm: number;
+    desiredWidthMm?: number; // User's desired width before auto-fitting
+    desiredHeightMm?: number; // User's desired height before auto-fitting
     triangleSizeMm: number; // edge length
     stlDepthMm: number;
 
