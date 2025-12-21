@@ -5,6 +5,7 @@ import { Button, Select } from '../common';
 import { TrianglePreview } from '../PatternEditor/TrianglePreview';
 import { GridCanvas } from './GridCanvas';
 import { PatternPalette } from './PatternPalette';
+import { triangleHeight } from '../../geometry/triangle';
 
 export function PanelDesigner() {
   const {
@@ -43,8 +44,36 @@ export function PanelDesigner() {
       return () => clearTimeout(timer);
     }
   }, [localPanel, hasChanges, updatePanel]);
-  
+
+  // Helper to fit panel dimensions to complete triangles
+  const fitToCompleteTriangles = (widthMm: number, heightMm: number, triangleSizeMm: number) => {
+    const h = triangleHeight(triangleSizeMm);
+    const halfEdge = triangleSizeMm / 2;
+
+    // Fit height to complete rows (minimum 1 row)
+    const rows = Math.max(1, Math.floor(heightMm / h));
+    const fittedHeight = rows * h;
+
+    // Fit width to complete columns (minimum 2 for one complete triangle)
+    const cols = Math.max(2, Math.floor(widthMm / halfEdge));
+    const fittedWidth = cols * halfEdge;
+
+    return { fittedWidth, fittedHeight };
+  };
+
   const handlePanelChange = (updated: Panel) => {
+    // Auto-fit dimensions to complete triangles when they change
+    if (updated.heightMm !== localPanel?.heightMm ||
+        updated.widthMm !== localPanel?.widthMm ||
+        updated.triangleSizeMm !== localPanel?.triangleSizeMm) {
+      const { fittedWidth, fittedHeight } = fitToCompleteTriangles(
+        updated.widthMm,
+        updated.heightMm,
+        updated.triangleSizeMm
+      );
+      updated.widthMm = fittedWidth;
+      updated.heightMm = fittedHeight;
+    }
     setLocalPanel(updated);
     setHasChanges(true);
   };

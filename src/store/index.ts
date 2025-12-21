@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Pattern, Panel, View, AppSettings, CellConfig } from '../types';
 import { builtInPatterns, createEmptyPattern, duplicatePattern } from '../data/builtInPatterns';
 import { testPatterns } from '../data/testPatterns';
+import { triangleHeight } from '../geometry/triangle';
 
 interface AppStore {
   // Navigation
@@ -49,6 +50,22 @@ const defaultSettings: AppSettings = {
   defaultBaseWeight: 0.8,
   defaultTriangleSize: 10,
   defaultStlDepth: 3,
+};
+
+// Helper to fit panel dimensions to complete triangles
+const fitToCompleteTriangles = (widthMm: number, heightMm: number, triangleSizeMm: number) => {
+  const h = triangleHeight(triangleSizeMm);
+  const halfEdge = triangleSizeMm / 2;
+
+  // Fit height to complete rows (minimum 1 row)
+  const rows = Math.max(1, Math.floor(heightMm / h));
+  const fittedHeight = rows * h;
+
+  // Fit width to complete columns (minimum 2 for one complete triangle)
+  const cols = Math.max(2, Math.floor(widthMm / halfEdge));
+  const fittedWidth = cols * halfEdge;
+
+  return { fittedWidth, fittedHeight };
 };
 
 export const useAppStore = create<AppStore>()(
@@ -126,13 +143,20 @@ export const useAppStore = create<AppStore>()(
         const { settings, patterns } = get();
         const emptyPattern = patterns.find(p => p.id === 'builtin-empty');
 
+        // Fit initial dimensions to complete triangles
+        const { fittedWidth, fittedHeight } = fitToCompleteTriangles(
+          100,
+          100,
+          settings.defaultTriangleSize
+        );
+
         const panel: Panel = {
           id,
           name: 'New Panel',
           created: Date.now(),
           modified: Date.now(),
-          widthMm: 100,
-          heightMm: 100,
+          widthMm: fittedWidth,
+          heightMm: fittedHeight,
           triangleSizeMm: settings.defaultTriangleSize,
           stlDepthMm: settings.defaultStlDepth,
           defaultPatternId: emptyPattern?.id || '',

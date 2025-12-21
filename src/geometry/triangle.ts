@@ -231,11 +231,11 @@ export function calculateGridDimensions(
 ): { rows: number; cols: number } {
   const h = triangleHeight(triangleSizeMm);
   const halfEdge = triangleSizeMm / 2;
-  
-  // Calculate how many triangles fit
-  const cols = Math.ceil(panelWidthMm / halfEdge) + 1;
-  const rows = Math.ceil(panelHeightMm / h) + 1;
-  
+
+  // Calculate how many complete triangles fit
+  const cols = Math.floor(panelWidthMm / halfEdge);
+  const rows = Math.floor(panelHeightMm / h);
+
   return { rows, cols };
 }
 
