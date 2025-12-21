@@ -101,7 +101,7 @@ export function GridCanvas({
         ctx.beginPath();
         ctx.rect(0, 0, panel.widthMm, panel.heightMm);
         ctx.clip();
-        
+
         // Draw triangle fill
         ctx.fillStyle = '#44403c'; // stone-700
         ctx.beginPath();
@@ -110,15 +110,24 @@ export function GridCanvas({
         ctx.lineTo(tri.C.x, tri.C.y);
         ctx.closePath();
         ctx.fill();
-        
+
+        // Clip to triangle bounds for pattern segments
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(tri.A.x, tri.A.y);
+        ctx.lineTo(tri.B.x, tri.B.y);
+        ctx.lineTo(tri.C.x, tri.C.y);
+        ctx.closePath();
+        ctx.clip();
+
         // Generate and draw pattern segments
         const segments = generatePatternSegments(pattern, tri, rotation);
-        
+
         ctx.strokeStyle = '#d6d3d1'; // stone-300
         ctx.fillStyle = '#d6d3d1';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        
+
         // Draw polygons (filled)
         for (const poly of segments.polygons) {
           ctx.beginPath();
@@ -129,7 +138,7 @@ export function GridCanvas({
           ctx.closePath();
           ctx.fill();
         }
-        
+
         // Draw lines
         for (const line of segments.lines) {
           ctx.lineWidth = line.weight;
@@ -138,7 +147,7 @@ export function GridCanvas({
           ctx.lineTo(line.end.x, line.end.y);
           ctx.stroke();
         }
-        
+
         // Draw arcs
         for (const arc of segments.arcs) {
           ctx.lineWidth = arc.weight;
@@ -146,7 +155,7 @@ export function GridCanvas({
           ctx.arc(arc.center.x, arc.center.y, arc.radius, arc.startAngle, arc.endAngle);
           ctx.stroke();
         }
-        
+
         // Draw triangle edges
         const edges = generateTriangleEdges(tri, pattern.baseWeight);
         for (const edge of edges) {
@@ -156,8 +165,9 @@ export function GridCanvas({
           ctx.lineTo(edge.end.x, edge.end.y);
           ctx.stroke();
         }
-        
-        ctx.restore();
+
+        ctx.restore(); // Restore triangle clip
+        ctx.restore(); // Restore panel clip
       }
     }
     
